@@ -1,6 +1,7 @@
 #include <sourcemod>
 #include <sdktools>
 #include <sdkhooks>
+#include <hexprops>
 #include <hexstocks>
 
 #define PLUGIN_AUTHOR         "Hexah"
@@ -10,6 +11,8 @@
 #pragma semicolon 1
 #pragma newdecls required
 
+//Handle
+Handle fOnPressProp;
 //Int
 int iEntHP[MAX_ENTITIES];
 
@@ -40,6 +43,11 @@ public Plugin myinfo =
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
 	bLate = late;
+	
+	RegPluginLibrary("hexprops");
+	
+	CreateNative("IsEntProp", Native_IsEntProp);
+	fOnPressProp = CreateGlobalForward("OnPlayerPressProp", ET_Ignore, Param_Cell, Param_Cell);
 }
 
 public void OnPluginStart()
@@ -827,6 +835,15 @@ int GetAimEnt(int client)
 	return iEnt;
 }
 
+//Natives
+public int Native_IsEntProp(Handle plugin, int numParams)
+{
+	int iEnt = GetNativeCell(1);
+	
+	return (PropsArray.FindValue(iEnt) != -1);
+}
+
+
 //Model Moving, foked from boomix (Models in map - https://forums.alliedmods.net/showthread.php?p=2389415), I've just adjusted it a little bit.
 int iPlayerSelectedBlock[MAXPLAYERS + 1];
 int iPlayerNewEntity[MAXPLAYERS + 1];
@@ -859,6 +876,19 @@ public Action OnPlayerRunCmd(int client, int &iButtons, int &iImpulse, float fVe
 			}
 			
 			iPlayerPrevButtons[client] = iButtons;
+		}
+		
+		if (iButtons & IN_USE)
+		{
+			int iEnt = GetAimEnt(client);
+		
+			if (PropsArray.FindValue(iEnt) != -1)
+			{
+				Call_StartForward(fOnPressProp);
+				Call_PushCell(client);
+				Call_PushCell(iEnt);
+				Call_Finish();
+			}
 		}
 	}
 }
