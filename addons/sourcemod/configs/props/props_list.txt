@@ -1,0 +1,123 @@
+"Props"
+{
+    "Fence" 
+    { 
+        "model"    "models/props_c17/fence03a.mdl" 
+    }
+	"Lamp"
+	{
+		"model"		"models/props_c17/lamppost03a_off.mdl"
+	}
+	"Table"
+	{
+		"model"		"models/props/cs_militia/table_kitchen.mdl"
+	}
+	"Stone"
+	{
+		"model"		"models/props/de_inferno/de_inferno_boulder_01.mdl"
+	}
+	"File Cabinet A"
+	{
+		"model"		"models/props/cs_office/file_cabinet1.mdl"
+	}
+	"File Cabinet B"
+	{
+		"model"		"models/props/cs_office/file_cabinet2.mdl"
+	}
+	"File Cabinet C"
+	{
+		"model"		"models/props/cs_office/file_cabinet3.mdl"
+	}
+	"Oil Drum"
+	{
+		"model"		"models/props_c17/oildrum001.mdl"
+	}
+	"Fountain"
+	{
+		"model"		"models/props/de_inferno/fountain.mdl"
+	}
+	"Processor"
+	{
+		"model"		"models/props/de_train/processor_nobase.mdl"
+	}
+	"Sofa 1"
+	{
+		"model"		"models/props/cs_militia/couch.mdl"
+	}
+	"Sofa 2"
+	{
+		"model"		"models/props/cs_office/sofa.mdl"
+	}
+	"Pipes"
+	{
+		"model"		"models/props_pipes/pipecluster32d_001a.mdl"
+	}
+	"Stone"
+	{
+		"model"		"models/props/de_dust/stoneblock01a.mdl"
+	}
+	"Monitor"
+	{
+		"model"		"models/props_lab/monitor02.mdl"
+	}
+	"Bench"
+	{
+		"model"		"models/props/cs_militia/wood_bench.mdl"
+	}
+	"pylon"
+	{
+		"model"		"models/props/cs_assault/pylon.mdl"
+    }
+	"Pipe"
+	{
+		"model"		"models/props_pipes/concrete_pipe001c.mdl"
+	}
+	"Emergency light"
+	{
+		"model"		"models/props/de_nuke/emergency_lighta.mdl"
+	}
+	"Book Shelf"
+	{
+		"model"		"models/props/cs_office/Bookshelf1.mdl"
+	}
+	"Food Stack"
+	{
+		"model"		"models/props/cs_militia/food_stack.mdl"
+	}
+	"Carton Box"
+	{
+		"model"		"models/props/cs_assault/dryer_box.mdl"
+	}
+	"Wheebarrow"
+	{
+		"model"		"models/props_junk/Wheebarrow01a.mdl"
+	}
+	"Bottle"
+	{
+		"model"		"models/props_junk/garbage_glassbottle001a.mdl"
+	}
+	"Traffic Cone"
+	{
+		"model"		"models/props_junk/TrafficCone001a.mdl"
+	}
+	"Cinder Block"
+	{
+		"model"		"models/props_junk/CinderBlock01a.mdl"
+	}
+	"Mile"
+	{
+		"model"		"models/props_c17/signpole001.mdl"
+	}
+	"Distroyed Van"
+	{
+		"model"		"models/props_vehicles/van001a.mdl"
+	}
+	"Toalet"
+	{
+		"model"		"models/props/cs_militia/toilet.mdl"
+	}
+	"Watermelon"
+	{
+		"model"		"models/props_junk/watermelon01.mdl"
+	}
+}
