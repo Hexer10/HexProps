@@ -687,6 +687,7 @@ void SaveProps()
 	
 	for (int i = 0; i < PropsArray.Length; i++)
 	{
+		PropKv.Rewind();
 		IntToString(++iCount, sKey, sizeof(sKey));
 		
 		if (PropKv.JumpToKey(sKey, true))
@@ -720,9 +721,7 @@ void SaveProps()
 			PropKv.SetNum("life", iLife);
 			PropKv.SetFloat("size", fSize);
 		}
-		PropKv.Rewind();
 	}
-	
 	PropKv.Rewind();
 	PropKv.ExportToFile(sPropPath);
 	
