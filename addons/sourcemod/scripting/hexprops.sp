@@ -109,7 +109,7 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3
 	{
 		int iEnt = GetAimEnt(client);
 		
-		if (PropsArray.FindValue(iEnt) != -1)
+		if (FindInArray(iEnt))
 		{
 			Call_StartForward(fOnPressProp);
 			Call_PushCell(client);
@@ -447,7 +447,7 @@ public int Handler_Color(Menu menu, MenuAction action, int param1, int param2)
 		
 		int iAimEnt = GetAimEnt(param1);
 		
-		if (PropsArray.FindValue(iAimEnt) != -1)
+		if (FindInArray(iAimEnt))
 		{
 			int r2, g2, b2, a;
 			
@@ -481,7 +481,7 @@ public int Handler_Alpha(Menu menu, MenuAction action, int param1, int param2)
 		
 		int iAimEnt = GetAimEnt(param1);
 		
-		if (PropsArray.FindValue(iAimEnt) != -1)
+		if (FindInArray(iAimEnt))
 		{
 			int r, g, b, a;
 			SetEntityRenderMode(iAimEnt, RENDER_TRANSCOLOR);
@@ -518,7 +518,7 @@ public int Handler_Life(Menu menu, MenuAction action, int param1, int param2)
 		
 		int iAimEnt = GetAimEnt(param1);
 		
-		if (PropsArray.FindValue(iAimEnt) != -1)
+		if (FindInArray(iAimEnt))
 		{
 			GetEntityRenderColor(iAimEnt, r, g, b, a);
 			iLife = StringToInt(info);
@@ -556,7 +556,7 @@ public int Handler_Solid(Menu menu, MenuAction action, int param1, int param2)
 		
 		int iAimEnt = GetAimEnt(param1);
 		
-		if (PropsArray.FindValue(iAimEnt) != -1)
+		if (FindInArray(iAimEnt))
 		{
 			SetEntProp(iAimEnt, Prop_Send, "m_nSolidType", StringToInt(info));
 		}
@@ -586,7 +586,7 @@ public int Handler_Size(Menu menu, MenuAction action, int param1, int param2)
 		
 		int iAimEnt = GetAimEnt(param1);
 		
-		if (PropsArray.FindValue(iAimEnt) != -1)
+		if (FindInArray(iAimEnt))
 		{
 			SetEntPropFloat(iAimEnt, Prop_Send, "m_flModelScale", StringToFloat(info));
 		}
@@ -680,7 +680,9 @@ int SpawnTempProp(int client, const char[] model)
 	
 	TeleportEntity(iEnt, vEndPoint, vEndAng, NULL_VECTOR);
 	
-	PropsArray.Push(iEnt);
+	int iIndex = PropsArray.Push(EntIndexToEntRef(iEnt));
+	
+	SetEntityName(iEnt, "Prop_%i", iIndex);
 	
 	return iEnt;
 }
@@ -693,7 +695,7 @@ bool RemoveProp(int client)
 	if (iAimEnt == -1)
 		return false;
 	
-	if (PropsArray.FindValue(iAimEnt) == -1)
+	if (!FindInArray(iAimEnt))
 		return false;
 	
 	AcceptEntityInput(iAimEnt, "kill");
@@ -717,9 +719,9 @@ bool SaveProps()
 		
 		if (PropKv.JumpToKey(sKey, true))
 		{
-			int iEnt = PropsArray.Get(i);
+			int iEnt = EntRefToEntIndex(PropsArray.Get(i));
 			
-			if (!IsValidEntity(iEnt))
+			if (iEnt == INVALID_ENT_REFERENCE)
 				continue;
 			
 			char sModel[PLATFORM_MAX_PATH];
@@ -779,7 +781,10 @@ void LoadProps()
 		int iEnt = SpawnProp(sModel, vPos, vAng, r, g, b, a, solid, iLife, fSize);
 		
 		if (iEnt != -1)
-			PropsArray.Push(iEnt);
+		{
+			int iIndex = PropsArray.Push(EntIndexToEntRef(iEnt));
+			SetEntityName(iEnt, "Prop_%i", iIndex);
+		}
 	}
 	while (PropKv.GotoNextKey());
 	
@@ -790,9 +795,9 @@ void ResetProps()
 {
 	for (int i = 0; i < PropsArray.Length; i++)
 	{
-		int iEnt = PropsArray.Get(i);
+		int iEnt = EntRefToEntIndex(PropsArray.Get(i));
 		
-		if (IsValidEntity(iEnt))
+		if (iEnt == INVALID_ENT_REFERENCE)
 			AcceptEntityInput(iEnt, "kill");
 	}
 	PropsArray.Clear();
@@ -841,6 +846,18 @@ void ClearPropKv()
 	PropKv.Rewind();
 }
 
+bool FindInArray(int iEnt)
+{
+	for (int i = 0; i < PropsArray.Length; i++)
+	{
+		int iSavedEnt = EntRefToEntIndex(PropsArray.Get(i));
+		
+		if (iSavedEnt == iEnt)
+			return true;
+	}
+	return false;
+}
+
 //Use this(intead of GetClientAimTarget) since we need to get non-solid entites too.
 int GetAimEnt(int client)
 {
@@ -865,5 +882,5 @@ public int Native_IsEntProp(Handle plugin, int numParams)
 {
 	int iEnt = GetNativeCell(1);
 	
-	return (PropsArray.FindValue(iEnt) != -1);
+	return (FindInArray(iEnt));
 }

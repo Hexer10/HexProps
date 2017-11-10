@@ -26,25 +26,12 @@ public Action Moving_OnPlayerRunCmd(int client, int &iButtons)
 			//** 	BLOCK ROTATE 	**//
 			if(iButtons & IN_RELOAD && !(iPlayerPrevButtons[client] & IN_RELOAD))
 			{
-				
 				RotateBlock(EntRefToEntIndex(iPlayerNewEntity[client]), 10.0);
 			}
 			
 			iPlayerPrevButtons[client] = iButtons;
 		}
 		
-		if (iButtons & IN_USE)
-		{
-			int iEnt = GetAimEnt(client);
-		
-			if (PropsArray.FindValue(iEnt) != -1)
-			{
-				Call_StartForward(fOnPressProp);
-				Call_PushCell(client);
-				Call_PushCell(iEnt);
-				Call_Finish();
-			}
-		}
 	}
 }
 
@@ -52,7 +39,7 @@ public void FirstTimePress(int client)
 {
 	iPlayerSelectedBlock[client] = GetAimEnt(client);
 	
-	if(iPlayerSelectedBlock[client] != -1 && (PropsArray.FindValue(iPlayerSelectedBlock[client]) != -1))
+	if(iPlayerSelectedBlock[client] != -1 && (FindInArray(iPlayerSelectedBlock[client])))
 	{
 		
 		bOnceStopped[client] = true;
