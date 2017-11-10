@@ -29,6 +29,8 @@ KeyValues PropKv;
 //Arrays
 ArrayList PropsArray;
 
+#include HexProps/model_moving.sp
+
 //Plugin Info
 public Plugin myinfo =
 {
@@ -45,8 +47,8 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	bLate = late;
 	
 	RegPluginLibrary("hexprops");
-	
 	CreateNative("IsEntProp", Native_IsEntProp);
+	
 	fOnPressProp = CreateGlobalForward("OnPlayerPressProp", ET_Ignore, Param_Cell, Param_Cell);
 }
 
@@ -98,6 +100,25 @@ public void Event_RoundPostStart(Event event, const char[] name, bool dontBroadc
 	PropsArray.Clear();
 	LoadProps();
 }
+
+public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3], float angles[3], int &weapon, int &subtype, int &cmdnum, int &tickcount, int &seed, int mouse[2])
+{
+	Moving_OnPlayerRunCmd(client, buttons);
+	
+	if (buttons & IN_USE)
+	{
+		int iEnt = GetAimEnt(client);
+		
+		if (PropsArray.FindValue(iEnt) != -1)
+		{
+			Call_StartForward(fOnPressProp);
+			Call_PushCell(client);
+			Call_PushCell(iEnt);
+			Call_Finish();
+		}
+	}
+}
+
 
 //Menu
 Menu CreateMainMenu(int client)
@@ -298,8 +319,15 @@ public int Handler_Main(Menu menu, MenuAction action, int param1, int param2)
 		}
 		else if (StrEqual(info, "Safe"))
 		{
-			SaveProps();
-			PrintToChat(param1, "[HexProps] Props successfully saved!");
+			bool bSaved = SaveProps();
+			if (bSaved)
+			{
+				PrintToChat(param1, "[HexProps] Props successfully saved!");
+			}
+			else
+			{
+				PrintToChat(param1, "[HexProps] No props were saved!");
+			}
 			CreateMainMenu(param1).Display(param1, MENU_TIME_FOREVER);
 		}
 		else
@@ -508,7 +536,6 @@ public int Handler_Life(Menu menu, MenuAction action, int param1, int param2)
 		}
 		
 		CreateLifeMenu().Display(param1, MENU_TIME_FOREVER);
-		
 	}
 	else if (action == MenuAction_Cancel)
 	{
@@ -600,9 +627,6 @@ int SpawnProp(const char[] model, float vPos[3], float vAng[3], int r, int g, in
 	if (!solid)
 		SetEntProp(iEnt, Prop_Send, "m_nSolidType", 1);
 	
-	
-	
-	
 	if (iLife)
 	{
 		SetEntProp(iEnt, Prop_Data, "m_takedamage", 2);
@@ -678,12 +702,13 @@ bool RemoveProp(int client)
 	return true;
 }
 
-void SaveProps()
+bool SaveProps()
 {
 	ClearPropKv();
 	
 	char sKey[8];
 	int iCount;
+	bool bReturn = false;
 	
 	for (int i = 0; i < PropsArray.Length; i++)
 	{
@@ -720,11 +745,12 @@ void SaveProps()
 			PropKv.SetNum("solid", solid);
 			PropKv.SetNum("life", iLife);
 			PropKv.SetFloat("size", fSize);
+			bReturn = true;
 		}
 	}
 	PropKv.Rewind();
 	PropKv.ExportToFile(sPropPath);
-	
+	return bReturn;
 }
 
 void LoadProps()
@@ -840,174 +866,4 @@ public int Native_IsEntProp(Handle plugin, int numParams)
 	int iEnt = GetNativeCell(1);
 	
 	return (PropsArray.FindValue(iEnt) != -1);
-}
-
-
-//Model Moving, foked from boomix (Models in map - https://forums.alliedmods.net/showthread.php?p=2389415), I've just adjusted it a little bit.
-int iPlayerSelectedBlock[MAXPLAYERS + 1];
-int iPlayerNewEntity[MAXPLAYERS + 1];
-int iPlayerPrevButtons[MAXPLAYERS + 1];
-float fPlayerSelectedBlockDistance[MAXPLAYERS + 1];
-bool bOnceStopped[MAXPLAYERS + 1];
-
-public Action OnPlayerRunCmd(int client, int &iButtons, int &iImpulse, float fVelocity[3], float fAngles[3], int &iWeapon)
-{
-	if(IsClientInGame(client))
-	{
-		if(bMoveProp[client])
-		{
-			// ** 	FIRST CLICK (RUNS ONCE) 	**//
-			if(!(iPlayerPrevButtons[client] & IN_USE) && iButtons & IN_USE)
-				FirstTimePress(client);
-			
-			//** 	SECOND CLICK (RUNS ALL TIME) 	**//
-			else if (iButtons & IN_USE)
-				StillPressingButton(client, iButtons);
-			
-			//** 	LAST CLICK (RUNS ONCE) 	**//
-			else if(bOnceStopped[client])
-				StoppedMovingBlock(client);
-			
-			//** 	BLOCK ROTATE 	**//
-			if(iButtons & IN_RELOAD && !(iPlayerPrevButtons[client] & IN_RELOAD))
-			{
-				RotateBlock(iPlayerNewEntity[client], 10.0);
-			}
-			
-			iPlayerPrevButtons[client] = iButtons;
-		}
-		
-		if (iButtons & IN_USE)
-		{
-			int iEnt = GetAimEnt(client);
-		
-			if (PropsArray.FindValue(iEnt) != -1)
-			{
-				Call_StartForward(fOnPressProp);
-				Call_PushCell(client);
-				Call_PushCell(iEnt);
-				Call_Finish();
-			}
-		}
-	}
-}
-
-public void FirstTimePress(int client)
-{
-	
-	iPlayerSelectedBlock[client] = GetAimEnt(client);
-	
-	if(IsValidEntity(iPlayerSelectedBlock[client]) && iPlayerSelectedBlock[client] != -1 && (PropsArray.FindValue(iPlayerSelectedBlock[client]) != -1))
-	{
-		
-		bOnceStopped[client] = true;
-		
-		if(!IsValidEntity(iPlayerNewEntity[client]) || iPlayerNewEntity[client] <= 0)
-			iPlayerNewEntity[client] = CreateEntityByName("prop_dynamic");
-		
-		float TeleportNewEntityOrg[3];
-		GetAimOrigin(client, TeleportNewEntityOrg);
-		TeleportEntity(iPlayerNewEntity[client], TeleportNewEntityOrg, NULL_VECTOR, NULL_VECTOR);
-		
-		SetVariantString("!activator");
-		AcceptEntityInput(iPlayerSelectedBlock[client], "SetParent", iPlayerNewEntity[client], iPlayerSelectedBlock[client], 0);
-		
-		float posent[3];
-		float playerpos[3];
-		GetClientEyePosition(client, playerpos);
-		GetEntityOrigin(iPlayerNewEntity[client], posent);
-		fPlayerSelectedBlockDistance[client] =  GetVectorDistance(playerpos, posent);
-		
-	}
-	
-}
-
-void StillPressingButton(int client, int &iButtons)
-{
-	if (iButtons & IN_ATTACK)
-		fPlayerSelectedBlockDistance[client] += 1.0;
-	
-	else if (iButtons & IN_ATTACK2)
-		fPlayerSelectedBlockDistance[client] -= 1.0;
-	
-	MoveBlock(client);
-}
-
-
-void MoveBlock(int client)
-{
-	if (IsValidEntity(iPlayerSelectedBlock[client]) && IsValidEntity(iPlayerNewEntity[client])) {
-		
-		float posent[3];
-		GetEntityOrigin(iPlayerNewEntity[client], posent);
-		
-		float playerpos[3];
-		GetClientEyePosition(client, playerpos);
-		
-		float playerangle[3];
-		GetClientEyeAngles(client, playerangle);
-		
-		float final[3];
-		AddInFrontOf(playerpos, playerangle, fPlayerSelectedBlockDistance[client], final);
-		
-		TeleportEntity(iPlayerNewEntity[client], final, NULL_VECTOR, NULL_VECTOR);
-		
-	}
-}
-
-
-public void StoppedMovingBlock(int client)
-{
-	
-	if(IsValidEntity(iPlayerSelectedBlock[client])) {
-		
-		SetVariantString("!activator");
-		AcceptEntityInput(iPlayerSelectedBlock[client], "SetParent", iPlayerSelectedBlock[client], iPlayerSelectedBlock[client], 0);
-	}
-	
-	bOnceStopped[client] = false;
-	
-}
-
-stock int GetAimOrigin(int client, float hOrigin[3])
-{
-	float vAngles[3];
-	float fOrigin[3];
-	GetClientEyePosition(client,fOrigin);
-	GetClientEyeAngles(client, vAngles);
-	
-	Handle trace = TR_TraceRayFilterEx(fOrigin, vAngles, MASK_ALL, RayType_Infinite, TraceRayDontHitPlayer);
-	
-	if(TR_DidHit(trace))
-	{
-		TR_GetEndPosition(hOrigin, trace);
-		CloseHandle(trace);
-		return 1;
-	}
-	
-	CloseHandle(trace);
-	return 0;
-}
-
-stock void AddInFrontOf(float vecOrigin[3], float vecAngle[3], float units, float output[3])
-{
-	float vecAngVectors[3];
-	vecAngVectors = vecAngle; //Don't change input
-	GetAngleVectors(vecAngVectors, vecAngVectors, NULL_VECTOR, NULL_VECTOR);
-	for (int i; i < 3; i++)
-		output[i] = vecOrigin[i] + (vecAngVectors[i] * units);
-}
-
-
-void RotateBlock(int entity, float rotatesize)
-{
-	if (IsValidEntity(entity))
-	{
-		float angles[3];
-		GetEntityAngles(entity, angles);
-		angles[0] += 0.0;
-		angles[1] += rotatesize;
-		angles[2] += 0.0;
-		TeleportEntity(entity, NULL_VECTOR, angles, NULL_VECTOR);
-	}
 }
