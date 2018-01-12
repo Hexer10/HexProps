@@ -6,11 +6,9 @@
 #endif
 #define _hexstocks_included
 
+#undef REQUIRED_EXTENSION
 #include <cstrike>
-
-#undef REQUIRE_EXTENSIONS
-#include <clientprefs_methodmaps>
-#define REQUIRE_EXTENSIONS
+#define REQUIRED_EXTENSION
 
 #define MAX_ENTITIES 2048
 
