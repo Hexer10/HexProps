@@ -1,0 +1,24 @@
+addons:
+  apt:
+    packages:
+    - lib32z1
+    - lib32stdc++6
+    
+language: c
+
+sudo: false
+
+script:
+- if [[ $TRAVIS_PULL_REQUEST != "false" ]]; then bash ci/test.sh; fi
+- if [[ $TRAVIS_PULL_REQUEST == "false" ]]; then bash ci/build.sh $TRAVIS_TAG; fi
+
+notifications:
+  email: false
+
+  deploy:
+  provider: releases
+  api_key:
+    secure: fZZWtA4RSj7CkPe5+hCdXMom71CnrW3+xv9+67yC6HC7OCBXJZsS+CfczokUtO+keBOWUenSqOktXz7sgV4fOvEF4go4jA+XOhcU7ZIhwld0CJmeFrdNOSyHaOQEOlhZXT+M6Zr/GvTfl99wk1itNeCEpr2JRMHXfzJHLN/m5D9XGIx3FaPiyiQzTMqRiQ5ydcw8UiqIqtVGpKW5c7Z1RQK2jzOzwzN5zbc+E2iQ+WbNZN/Qcb08fonhb5uHN/bG1VdrrDs4NvXI0qEfBKwT2h/KgbSVDg+Vai4anQe5Eg/jcG3DkE1/cZDITwqMjeUN6rtXfydpkf7ZeWCZm0FWnEDXsVNWIibLp8HP2z5tLwONwD/wWVY8BNCl9jOyDtzdfB9I++f7T0/uq1do5PN5SDycdRlCJ/4yDmTfUHJCQirWe/Pe2bJLu7EYtRU1diKlpM1HX1vK4bigfwZhST4fV+82i/iDtfSke3yBEADREmixcsUxvO6oV/7aybHkyi34dus6aFeHytbJGpu0d9ojWaLLxgEvUr4BEq75hI6gf3pbBWbwi+PBKyK+4CChEipZo456lU+FkKQHedHWfpCsLOBvsTE95jfhDw2PKTIEUZxIr62gKuJDo91fhTW/jd7JNu+xc88HPX1gsKucmHWmFsnqLJnGHPji5K3cQ0TxMaE=
+  file: hexprops.zip
+  on:
+    repo: Hexer10/HexProps

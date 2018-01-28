@@ -5,7 +5,7 @@
 #include <hexstocks>
 
 #define PLUGIN_AUTHOR         "Hexah"
-#define PLUGIN_VERSION        "1.0"
+#define PLUGIN_VERSION        "<TAG>"
 
 
 #pragma semicolon 1
