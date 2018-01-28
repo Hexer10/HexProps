@@ -29,7 +29,7 @@ echo "Move plugins files to their folder"
 mv addons/sourcemod/scripting/include/hexprops.inc build/addons/sourcemod/scripting/include
 mv addons/sourcemod/scripting/hexprops.sp build/addons/sourcemod/scripting
 mv addons/sourcemod/scripting/compiled/hexprops.smx build/addons/sourcemod/plugins
-mv addons/sourcemod/configs/props/props_list.cfg build/addons/sourcemod/configs/props
+mv addons/sourcemod/configs/props/props_list.txt build/addons/sourcemod/configs/props
 
 
 echo "Compress the plugin"
