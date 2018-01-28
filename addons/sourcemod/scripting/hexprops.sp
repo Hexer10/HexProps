@@ -7,7 +7,6 @@
 #define PLUGIN_AUTHOR         "Hexah"
 #define PLUGIN_VERSION        "<TAG>"
 
-
 #pragma semicolon 1
 #pragma newdecls required
 

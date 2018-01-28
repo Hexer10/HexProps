@@ -6,10 +6,6 @@
 #endif
 #define _hexstocks_included
 
-#undef REQUIRED_EXTENSION
-#include <cstrike>
-#define REQUIRED_EXTENSION
-
 #define MAX_ENTITIES 2048
 
 /*
@@ -414,7 +410,49 @@ stock float GetEntitySpeed(int entity)
 	return GetEntPropFloat(entity, Prop_Data, "m_flLaggedMovementValue");
 }
 
+stock void SetEntityName(int entity, char[] format, any ...)
+{
+	char sName[128];
+	VFormat(sName, sizeof(sName), format, 3);
+	
+	SetEntPropString(entity, Prop_Data, "m_iName", sName); 
+}
 
+/**
+* Get an entity origin
+*
+* @param entity		Entity index.
+* @param origin		Vector to store origin.
+* @noreturn
+*/
+stock void GetEntityOrigin(int entity, float origin[3])
+{
+	GetEntPropVector(entity, Prop_Send, "m_vecOrigin", origin);
+}
+
+/**
+* Get an entity angles
+*
+* @param entity		Entity index.
+* @param origin		Vector to store origin.
+* @noreturn
+*/
+stock void GetEntityAngles(int entity, float angles[3])
+{
+	GetEntPropVector(entity, Prop_Data, "m_angRotation", angles);
+}
+
+/**
+* Get an entity model
+*
+* @param entity		Entity index.
+* @param origin		String to store model.
+* @noreturn
+*/
+stock void GetEntityModel(int entity, char model[PLATFORM_MAX_PATH])
+{
+	GetEntPropString(entity, Prop_Data, "m_ModelName", model, sizeof(model));
+}
 
 /********************************** MISC *********************************/
 
@@ -468,11 +506,39 @@ stock void SetLogFile(char LogFile[PLATFORM_MAX_PATH], char[] FileName, char[] F
 
 
 /**
-* Create File without overriding the existing one (if exist)
-*
-* @param file			File Path
-*
-*/
+ * Opens and creates, returning a File handle on success. File handles
+ * should be closed with delete or CloseHandle().
+ *
+ * The open mode may be one of the following strings:
+ *   "r": Open an existing file for reading.
+ *   "w": Create a file for writing, or truncate (delete the contents of) an
+ *        existing file and then open it for writing.
+ *   "a": Create a file for writing, or open an existing file such that writes
+ *        will be appended to the end.
+ *   "r+": Open an existing file for both reading and writing.
+ *   "w+": Create a file for reading and writing, or truncate an existing file
+ *         and then open it for reading and writing.
+ *   "a+": Create a file for both reading and writing, or open an existing file
+ *         such that writes will be appended to the end.
+ *
+ * The open mode may also contain an additional character after "r", "w", or "a",
+ * but before any "+" sign. This character may be "b" (indicating binary mode) or
+ * "t" (indicating text mode). By default, "text" mode is implied. On Linux and
+ * Mac, this has no distinction from binary mode. On Windows, it causes the '\n'
+ * character (0xA) to be written as "\r\n" (0xD, 0xA).
+ *
+ * Example: "rb" opens a binary file for writing; "at" opens a text file for
+ * appending.
+ *
+ * @param file			File to open.
+ * @param mode			Open mode.
+ * @param use_valve_fs  If true, the Valve file system will be used instead.
+ *                      This can be used to find files existing in valve
+ *						search paths, rather than solely files existing directly
+ *						in the gamedir.
+ * @param valve_path_id	If use_valve_fs, a search path from gameinfo or NULL_STRING for all search paths.
+ * @return				A File handle, or null if the file could not be opened.
+ */
 stock File OpenFileEx(const char[] file, const char[] mode, bool use_valve_fs = false, const char[] valve_path_id = "GAME")
 {
 	if (!FileExists(file))
@@ -500,82 +566,11 @@ stock void StopTimer(Handle &timer)
 }
 
 /**
-* Get an entity origin
+* Returns if warmup is in progress
 *
-* @param entity		Entity index.
-* @param origin		Vector to store origin.
-* @noreturn
+* @return		True if it is, false otherwise
 */
-stock void GetEntityOrigin(int entity, float origin[3])
+stock bool IsWarmup()
 {
-	GetEntPropVector(entity, Prop_Send, "m_vecOrigin", origin);
-}
-
-/**
-* Get an entity angles
-*
-* @param entity		Entity index.
-* @param origin		Vector to store origin.
-* @noreturn
-*/
-stock void GetEntityAngles(int entity, float angles[3])
-{
-	GetEntPropVector(entity, Prop_Data, "m_angRotation", angles);
-}
-
-/**
-* Get an entity model
-*
-* @param entity		Entity index.
-* @param origin		String to store model.
-* @noreturn
-*/
-stock void GetEntityModel(int entity, char model[PLATFORM_MAX_PATH])
-{
-	GetEntPropString(entity, Prop_Data, "m_ModelName", model, sizeof(model));
-}
-
-
-
-/** Prints a message to a specific client in the hud area. !WIP!
-* @param client			Client Index.
-* @param message			Message to send
-* @param holdtime			Number of seconds to hold the text.
-* @param x					x coordinatates from 0 to 1.	-1 is the center.
-* @param y					y coordinatates from 0 to 1.	-1 is the center.
-* @param red				Red color value
-* @param green				Green color value
-* @param blue				Blue color value
-* @param alpha				Alpha transparency value
-* @param fadeIn			Number of seconds to spedd fadingIn
-* @param fadeOut			Number of seconds to spend fadingOut
-* @param channel		A channel number.
-*						If -1, then a channel will automatically be selected
-*						based on the least-recently-used channel.  If the
-*						channel is any other number, it will be modulo'd with
-*						the channel count to get a final channel number.
-* @param fxtime			Duration of the choosen effect(may not apply on all effects)
-* @param effect 		0/1 causes the text to fade in and fade out.
-*						2 causes the text to flash[?].
-* @param ...
-*
-*
-*/
-stock int PrintToHud(int client, const char[] message, float holdtime = 5.0, float x = -1.0, float y = -1.0, int red = 255, int green = 255, int blue = 255, int alpha, float fadeIn = 0.2, float fadeOut = 0.1, int channel = -1, float fxTime = 6.0, int effect = 0, any...)
-{
-	SetHudTextParams(x, y, holdtime, red, green, blue, alpha, 0, fxTime, fadeIn, fadeOut);
-	return ShowHudText(client, channel, message);
-}
-
-
-stock int PrintToHudEx(int client, const char[] message, float x = -1.0, float y = -1.0, float holdtime = 0.2, int color[4] =  { 255, 255, 255, 255 }, int channel = -1, any...)
-{
-	char buffer[256];
-	int colors[4];
-	VFormat(buffer, sizeof(buffer), message, 8);
-	for (int i = 0; i <= 3; i++)
-	{
-		colors[i] = color[i];
-	}
-	PrintToHud(client, buffer, holdtime, x, y, colors[0], colors[1], colors[2], colors[3], 0.2, 0.1, channel);
+	return (GameRules_GetProp("m_bWarmupPeriod") == 1);
 }
