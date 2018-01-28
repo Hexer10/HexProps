@@ -3,6 +3,8 @@ set -ev
 
 TAG=$1
 
+dos2unix scriptname
+
 echo "Download und extract sourcemod"
 wget "http://www.sourcemod.net/latest.php?version=1.8&os=linux" -O sourcemod.tar.gz
 tar -xzf sourcemod.tar.gz
