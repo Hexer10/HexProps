@@ -34,6 +34,6 @@ mv addons/sourcemod/configs/props/props_list.txt build/addons/sourcemod/configs/
 
 echo "Compress the plugin"
 mv LICENSE build/
-cd build/ && zip -9rq hexpros.zip addons/ LICENSE && mv hexprops.zip ../
+cd build/ && zip -9rq hexprops.zip addons/ LICENSE && mv hexprops.zip ../
 
 echo "Build done"
