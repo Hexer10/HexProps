@@ -11,12 +11,8 @@ echo "Give compiler rights for compile"
 chmod +x addons/sourcemod/scripting/spcomp
 
 echo "Set plugins version"
-for file in addons/sourcemod/scripting/hexprops.sp
-do
-  sed -i "s/<TAG>/$TAG/g" $file > output.txt
-  rm output.txt
-done
-
+sed -i "s/<TAG>/$TAG/g" addons/sourcemod/scripting/hexprops.sp
+  
 addons/sourcemod/scripting/compile.sh hexprops.sp
 
 echo "Remove plugins folder if exists"
