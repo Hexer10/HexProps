@@ -17,7 +17,6 @@ int iEntHP[MAX_ENTITIES];
 
 //Boolean
 bool bMoveProp[MAXPLAYERS+1];
-bool bLate;
 
 //String
 char sPropPath[PLATFORM_MAX_PATH];
@@ -43,7 +42,6 @@ public Plugin myinfo =
 //Startup
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
-	bLate = late;
 	
 	RegPluginLibrary("hexprops");
 	CreateNative("IsEntProp", Native_IsEntProp);
@@ -57,12 +55,6 @@ public void OnPluginStart()
 	
 	RegAdminCmd("sm_props", Cmd_Props, ADMFLAG_GENERIC);
 	HookEvent("round_poststart", Event_RoundPostStart);
-	
-	if (bLate) //Support lateload
-	{
-		PreparePropKv();
-		LoadProps();
-	}
 }
 
 public void OnMapStart()
