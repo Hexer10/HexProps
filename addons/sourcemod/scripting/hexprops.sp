@@ -788,7 +788,7 @@ void ResetProps()
 	{
 		int iEnt = EntRefToEntIndex(PropsArray.Get(i));
 		
-		if (iEnt == INVALID_ENT_REFERENCE)
+		if (iEnt != INVALID_ENT_REFERENCE)
 			AcceptEntityInput(iEnt, "kill");
 	}
 	PropsArray.Clear();
