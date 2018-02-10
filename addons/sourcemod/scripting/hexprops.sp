@@ -129,6 +129,7 @@ Menu CreateMainMenu(int client)
 	MainMenu.AddItem("Safe", "Save Props");
 	MainMenu.AddItem("Move", sEditDisplay);
 	MainMenu.AddItem("Reset", "Reset Props");
+	MainMenu.AddItem("DeleteAll", "Delete All Props");
 	
 	return MainMenu;
 }
@@ -185,6 +186,22 @@ Menu CreateEditMenu()
 	EditMenu.ExitBackButton = true;
 	
 	return EditMenu;
+}
+
+Menu CreateDeleteAllMenu()
+{
+	Menu DeleteAllMenu = new Menu(Handler_DeleteAll);
+	
+	DeleteAllMenu.SetTitle("Are you sure?");
+	
+	DeleteAllMenu.AddItem("", "If you want to go back", ITEMDRAW_DISABLED);
+	DeleteAllMenu.AddItem("", "after you deleted the props", ITEMDRAW_DISABLED);
+	DeleteAllMenu.AddItem("", "press Reset Props and do NOT save the props!", ITEMDRAW_DISABLED);
+	DeleteAllMenu.AddItem("0", "NO");
+	DeleteAllMenu.AddItem("1", "YES");
+	
+	DeleteAllMenu.ExitBackButton = true;
+	return DeleteAllMenu;
 }
 
 Menu CreateColorMenu()
@@ -321,11 +338,15 @@ public int Handler_Main(Menu menu, MenuAction action, int param1, int param2)
 			}
 			CreateMainMenu(param1).Display(param1, MENU_TIME_FOREVER);
 		}
-		else
+		else if (StrEqual(info, "Reset"))
 		{
 			ResetProps();
 			PrintToChat(param1, "[HexProps] Props successfully resetted!");
 			CreateMainMenu(param1).Display(param1, MENU_TIME_FOREVER);
+		}
+		else
+		{
+			CreateDeleteAllMenu().Display(param1, 20);
 		}
 	}
 	else if (action == MenuAction_End)
@@ -390,6 +411,39 @@ public int Handler_Edit(Menu menu, MenuAction action, int param1, int param2)
 	else if (action == MenuAction_Cancel)
 	{
 		CreateMainMenu(param1).Display(param1, MENU_TIME_FOREVER);
+	}
+	else if (action == MenuAction_End)
+	{
+		delete menu;
+	}
+}
+
+public int Handler_DeleteAll(Menu menu, MenuAction action, int param1, int param2)
+{
+	if (action == MenuAction_Select)
+	{
+		char info[64];
+		menu.GetItem(param2, info, sizeof(info));
+		bool bDelete = view_as<bool>(StringToInt(info));
+		
+		if (bDelete)
+		{
+			if (!PropKv.GotoFirstSubKey())
+				SetFailState("- HexProps - Failed to read: %s", sPropPath);
+			do 
+			{
+				PropKv.DeleteThis();
+			}
+			while (PropKv.GotoNextKey());
+			PropKv.Rewind();
+			
+			ReplyToCommand(param1, "[SM] Props deleted!");
+		}
+		CreateMainMenu(param1).Display(param1, MENU_TIME_FOREVER);
+	}
+	else if (action == MenuAction_Cancel)
+	{
+		CreateEditMenu().Display(param1, MENU_TIME_FOREVER);
 	}
 	else if (action == MenuAction_End)
 	{
