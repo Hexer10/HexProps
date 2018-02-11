@@ -430,6 +430,7 @@ public int Handler_DeleteAll(Menu menu, MenuAction action, int param1, int param
 		{
 			if (!PropKv.GotoFirstSubKey())
 				SetFailState("- HexProps - Failed to read: %s", sPropPath);
+				
 			do 
 			{
 				PropKv.DeleteThis();
@@ -437,6 +438,14 @@ public int Handler_DeleteAll(Menu menu, MenuAction action, int param1, int param
 			while (PropKv.GotoNextKey());
 			PropKv.Rewind();
 			
+			for (int i = 0; i < PropsArray.Length; i++)
+			{
+				int iEnt = EntRefToEntIndex(PropsArray.Get(i));
+				if (iEnt == INVALID_ENT_REFERENCE)
+					continue;
+					
+				AcceptEntityInput(iEnt, "killl");
+			}
 			ReplyToCommand(param1, "[SM] Props deleted!");
 		}
 		CreateMainMenu(param1).Display(param1, MENU_TIME_FOREVER);
@@ -825,6 +834,7 @@ void LoadProps()
 		StringToColor(sColors, r, g, b, a);
 		int iEnt = SpawnProp(sModel, vPos, vAng, r, g, b, a, solid, iLife, fSize);
 		
+		PropsArray.Clear();
 		if (iEnt != -1)
 		{
 			int iIndex = PropsArray.Push(EntIndexToEntRef(iEnt));
