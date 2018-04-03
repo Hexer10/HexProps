@@ -17,6 +17,7 @@ int iEntHP[MAX_ENTITIES];
 
 //Boolean
 bool bMoveProp[MAXPLAYERS+1];
+bool bPhysicProp[MAXPLAYERS+1];
 
 //String
 char sPropPath[PLATFORM_MAX_PATH];
@@ -120,14 +121,17 @@ Menu CreateMainMenu(int client)
 	MainMenu.SetTitle("Props");
 	
 	
-	char sEditDisplay[32];
-	Format(sEditDisplay, sizeof(sEditDisplay), "Move: %s", bMoveProp[client]? "On" : "Off");
+	char sMoveDisplay[32];
+	char sPhysicDisplay[32];
+	Format(sMoveDisplay, sizeof(sMoveDisplay), "Move: %s", bMoveProp[client]? "On" : "Off");
+	Format(sPhysicDisplay, sizeof(sPhysicDisplay), "Physic: %s", bPhysicProp[client]? "On" : "Off");
 	
 	MainMenu.AddItem("Place", "Place New Prop");
 	MainMenu.AddItem("Remove", "Remove Props");
 	MainMenu.AddItem("Edit", "Edit Props");
 	MainMenu.AddItem("Safe", "Save Props");
-	MainMenu.AddItem("Move", sEditDisplay);
+	MainMenu.AddItem("Move", sMoveDisplay);
+	MainMenu.AddItem("Physic", sPhysicDisplay);
 	MainMenu.AddItem("Reset", "Reset Props");
 	MainMenu.AddItem("DeleteAll", "Delete All Props");
 	
@@ -181,7 +185,8 @@ Menu CreateEditMenu()
 	EditMenu.AddItem("Color", "Set Color");
 	EditMenu.AddItem("Life", "Set LifePoints");
 	EditMenu.AddItem("Solid", "Set Consistency");
-	EditMenu.AddItem("Size", "Set Size", ITEMDRAW_DISABLED);
+	EditMenu.AddItem("Size", "Set Size (Not working on all props)");
+	EditMenu.AddItem("Physic", "Make Physic");
 	
 	EditMenu.ExitBackButton = true;
 	
@@ -325,6 +330,12 @@ public int Handler_Main(Menu menu, MenuAction action, int param1, int param2)
 			
 			CreateMainMenu(param1).Display(param1, MENU_TIME_FOREVER);
 		}
+		else if (StrEqual(info, "Physic"))
+		{
+			bPhysicProp[param1] = !bPhysicProp[param1];
+			
+			CreateMainMenu(param1).Display(param1, MENU_TIME_FOREVER);
+		}
 		else if (StrEqual(info, "Safe"))
 		{
 			bool bSaved = SaveProps();
@@ -366,7 +377,13 @@ public int Handler_Props(Menu menu, MenuAction action, int param1, int param2)
 		if (!IsModelPrecached(info))
 			PrecacheModel(info);
 		
-		SpawnTempProp(param1, info);
+		char sClass[64] = "prop_dynamic_override";
+		if (bPhysicProp[param1])
+		{
+			strcopy(sClass, sizeof(sClass), "prop_physics_multiplayer");
+		}
+
+		SpawnTempProp(param1, sClass, info);
 		CreatePropMenu().DisplayAt(param1, GetMenuSelectionPosition(), MENU_TIME_FOREVER);
 	}
 	else if (action == MenuAction_Cancel)
@@ -402,9 +419,14 @@ public int Handler_Edit(Menu menu, MenuAction action, int param1, int param2)
 		{
 			CreateSolidMenu().Display(param1, MENU_TIME_FOREVER);
 		}
-		else
+		else if (StrEqual(info, "Size"))
 		{
 			CreateSizeMenu().Display(param1, MENU_TIME_FOREVER);
+		}
+		else
+		{
+			MakePhysic(param1);
+			CreateEditMenu().Display(param1, MENU_TIME_FOREVER);
 		}
 		
 	}
@@ -418,6 +440,50 @@ public int Handler_Edit(Menu menu, MenuAction action, int param1, int param2)
 	}
 }
 
+void MakePhysic(int client)
+{
+	int iEnt = GetAimEnt(client);
+	
+	if (iEnt == -1)
+	{
+		PrintToChat(client, "[HexProps] Prop couldn't be found");
+		return;
+	}
+
+	int iIndex = FindInArray(iEnt);
+
+	if (!iIndex || iIndex == -1)
+	{
+		PrintToChat(client, "[HexProps] Prop couldn't be found");
+		return;
+	}
+
+	char sModel[PLATFORM_MAX_PATH];
+	float vPos[3];
+	GetEntityModel(iEnt, sModel);
+	GetEntityOrigin(iEnt, vPos);
+
+	AcceptEntityInput(iEnt, "kill");
+	PropsArray.Erase(iIndex);
+
+	iEnt = -1;
+	iEnt = CreateEntityByName("prop_physics_multiplayer");
+
+	if (iEnt == -1)
+	{
+		PrintToChat(client, "[HexProps] Error occured while creating the physic prop!");
+		return;
+	}
+
+	DispatchKeyValue(iEnt, "Physics Mode", "1");
+	SetEntityModel(iEnt, sModel);
+	DispatchSpawn(iEnt);
+	
+	TeleportEntity(iEnt, vPos, NULL_VECTOR, NULL_VECTOR);
+
+	PropsArray.Push(EntIndexToEntRef(iEnt));
+
+}
 public int Handler_DeleteAll(Menu menu, MenuAction action, int param1, int param2)
 {
 	if (action == MenuAction_Select)
@@ -444,7 +510,7 @@ public int Handler_DeleteAll(Menu menu, MenuAction action, int param1, int param
 				if (iEnt == INVALID_ENT_REFERENCE)
 					continue;
 					
-				AcceptEntityInput(iEnt, "killl");
+				AcceptEntityInput(iEnt, "kill");
 			}
 			ReplyToCommand(param1, "[SM] Props deleted!");
 		}
@@ -662,9 +728,9 @@ public int Handler_Size(Menu menu, MenuAction action, int param1, int param2)
 }
 
 //Functions
-int SpawnProp(const char[] model, float vPos[3], float vAng[3], int r, int g, int b, int a, bool solid, int iLife, float fSize)
+int SpawnProp(const char[] classname, const char[] model, float vPos[3], float vAng[3], int r, int g, int b, int a, bool solid, int iLife, float fSize)
 {
-	int iEnt = CreateEntityByName("prop_dynamic_override");
+	int iEnt = CreateEntityByName(classname);
 	
 	if (iEnt == -1)
 		return -1;
@@ -690,13 +756,19 @@ int SpawnProp(const char[] model, float vPos[3], float vAng[3], int r, int g, in
 	
 	SetEntPropFloat(iEnt, Prop_Send, "m_flModelScale", fSize);
 	
+	if (StrContains(classname, "physics") != -1)
+	{
+		DispatchKeyValue(iEnt, "Physics Mode", "1");
+		DispatchSpawn(iEnt);
+	}
+
 	TeleportEntity(iEnt, vPos, vAng, NULL_VECTOR);
 	return iEnt;
 }
 
-int SpawnTempProp(int client, const char[] model)
+int SpawnTempProp(int client, const char[] classname, const char[] model)
 {
-	int iEnt = CreateEntityByName("prop_dynamic_override");
+	int iEnt = CreateEntityByName(classname);
 	
 	if (iEnt == -1)
 	{
@@ -732,6 +804,12 @@ int SpawnTempProp(int client, const char[] model)
 		return -1;
 	}
 	
+	if (StrContains(classname, "physics") != -1)
+	{
+		DispatchKeyValue(iEnt, "Physics Mode", "1");
+		DispatchSpawn(iEnt);
+	}
+
 	TeleportEntity(iEnt, vEndPoint, vEndAng, NULL_VECTOR);
 	
 	int iIndex = PropsArray.Push(EntIndexToEntRef(iEnt));
@@ -749,7 +827,9 @@ bool RemoveProp(int client)
 	if (iAimEnt == -1)
 		return false;
 	
-	if (!FindInArray(iAimEnt))
+	iIndex = FindInArray(iAimEnt);
+
+	if (!iIndex)
 		return false;
 	
 	AcceptEntityInput(iAimEnt, "kill");
@@ -778,12 +858,14 @@ bool SaveProps()
 			if (iEnt == INVALID_ENT_REFERENCE)
 				continue;
 			
+			char sClass[64];
 			char sModel[PLATFORM_MAX_PATH];
 			char sColor[16];
 			float vPos[3];
 			float vAng[3];
 			int r, b, g, a;
 			
+			GetEntityClassname(iEnt, sClass, sizeof(sClass));
 			GetEntityModel(iEnt, sModel);
 			GetEntityOrigin(iEnt, vPos);
 			GetEntityAngles(iEnt, vAng);
@@ -794,6 +876,7 @@ bool SaveProps()
 			
 			ColorToString(sColor, sizeof(sColor), r, b, g, a);
 			
+			PropKv.SetString("classname", sClass);
 			PropKv.SetString("model", sModel);
 			PropKv.SetVector("position", vPos);
 			PropKv.SetVector("angles", vAng);
@@ -816,12 +899,14 @@ void LoadProps()
 	
 	do
 	{
+		char sClass[64];
 		char sModel[PLATFORM_MAX_PATH];
 		float vPos[3];
 		float vAng[3];
 		char sColors[16];
 		int r, g, b, a;
 		
+		PropKv.GetString("classname", sClass, sizeof(sClass));
 		PropKv.GetString("model", sModel, sizeof(sModel));
 		PropKv.GetVector("position", vPos);
 		PropKv.GetVector("angles", vAng);
@@ -832,7 +917,7 @@ void LoadProps()
 		float fSize = PropKv.GetFloat("size");
 		
 		StringToColor(sColors, r, g, b, a);
-		int iEnt = SpawnProp(sModel, vPos, vAng, r, g, b, a, solid, iLife, fSize);
+		int iEnt = SpawnProp(sClass, sModel, vPos, vAng, r, g, b, a, solid, iLife, fSize);
 		
 		PropsArray.Clear();
 		if (iEnt != -1)
@@ -901,16 +986,26 @@ void ClearPropKv()
 	PropKv.Rewind();
 }
 
-bool FindInArray(int iEnt)
+int FindInArray(int iEnt)
 {
+	if (iEnt == -1)
+		return 0;
+
 	for (int i = 0; i < PropsArray.Length; i++)
 	{
 		int iSavedEnt = EntRefToEntIndex(PropsArray.Get(i));
 		
+		if (iSavedEnt == INVALID_ENT_REFERENCE)
+			return 0;
+
 		if (iSavedEnt == iEnt)
-			return true;
+		{
+			if (!i)
+				return -1; //Temp fix
+			return i;
+		}
 	}
-	return false;
+	return 0;
 }
 
 //Use this(intead of GetClientAimTarget) since we need to get non-solid entites too.
