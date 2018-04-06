@@ -39,7 +39,7 @@ public void FirstTimePress(int client)
 {
 	iPlayerSelectedBlock[client] = GetAimEnt(client);
 	
-	if(iPlayerSelectedBlock[client] != -1 && FindInArray(iPlayerSelectedBlock[client] != -1))
+	if(iPlayerSelectedBlock[client] != -1 && FindInArray(iPlayerSelectedBlock[client]) != -1)
 	{
 		
 		bOnceStopped[client] = true;
