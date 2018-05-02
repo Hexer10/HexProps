@@ -87,6 +87,12 @@ public Action Cmd_Props(int client, int args)
 }
 
 //Events
+public void OnClientDisconnect(int client)
+{
+	bMoveProp[client] = false;
+	bPhysicProp[client] = false;
+}
+
 public void Event_RoundPostStart(Event event, const char[] name, bool dontBroadcast)
 {
 	PropsArray.Clear();
@@ -988,11 +994,13 @@ void ClearPropKv()
 
 int FindInArray(int iEnt)
 {
+	//PrintToChatAll("%d", iEnt);	
 	if (iEnt == -1)
 		return 0;
 
 	for (int i = 0; i < PropsArray.Length; i++)
 	{
+		PrintToChatAll("%d | %d", iEnt, i);
 		int iSavedEnt = EntRefToEntIndex(PropsArray.Get(i));
 		
 		if (iSavedEnt == INVALID_ENT_REFERENCE)

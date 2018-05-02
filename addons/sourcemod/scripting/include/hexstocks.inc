@@ -387,6 +387,15 @@ stock void SetCvarString(char cvarName[64], char[] value)
 /********************************************** ENTITIES *********************************************/
 
 
+stock bool IsValidEnt(int ent)
+{
+	if (ent == INVALID_ENT_REFERENCE && ent <= MaxClients && !(IsValidEntity(ent) || IsValidEdict(ent))
+	{
+		return false;
+	}
+	return true;
+}
+
 /**
 * Sets an entity's speed
 *

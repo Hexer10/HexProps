@@ -7,7 +7,7 @@ bool bOnceStopped[MAXPLAYERS + 1];
 
 public Action Moving_OnPlayerRunCmd(int client, int &iButtons)
 {
-	if(IsClientInGame(client))
+	if(IsClientInGame(client) && CheckCommandAccess(client, "sm_props", ADMFLAG_GENERIC))
 	{
 		if(bMoveProp[client])
 		{
@@ -39,7 +39,7 @@ public void FirstTimePress(int client)
 {
 	iPlayerSelectedBlock[client] = GetAimEnt(client);
 	
-	if(iPlayerSelectedBlock[client] != -1 && (FindInArray(iPlayerSelectedBlock[client])))
+	if(iPlayerSelectedBlock[client] != -1 && (FindInArray(iPlayerSelectedBlock[client]) != -1))
 	{
 		
 		bOnceStopped[client] = true;
