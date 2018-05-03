@@ -43,7 +43,6 @@ public Plugin myinfo =
 //Startup
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
-	
 	RegPluginLibrary("hexprops");
 	CreateNative("IsEntProp", Native_IsEntProp);
 	
@@ -458,7 +457,7 @@ void MakePhysic(int client)
 
 	int iIndex = FindInArray(iEnt);
 
-	if (!iIndex || iIndex == -1)
+	if (iIndex == -1)
 	{
 		PrintToChat(client, "[HexProps] Prop couldn't be found");
 		return;
@@ -472,7 +471,6 @@ void MakePhysic(int client)
 	AcceptEntityInput(iEnt, "kill");
 	PropsArray.Erase(iIndex);
 
-	iEnt = -1;
 	iEnt = CreateEntityByName("prop_physics_multiplayer");
 
 	if (iEnt == -1)
@@ -513,7 +511,7 @@ public int Handler_DeleteAll(Menu menu, MenuAction action, int param1, int param
 			for (int i = 0; i < PropsArray.Length; i++)
 			{
 				int iEnt = EntRefToEntIndex(PropsArray.Get(i));
-				if (iEnt == INVALID_ENT_REFERENCE)
+				if (!IsValidEnt(iEnt))
 					continue;
 					
 				AcceptEntityInput(iEnt, "kill");
@@ -828,14 +826,13 @@ int SpawnTempProp(int client, const char[] classname, const char[] model)
 bool RemoveProp(int client)
 {
 	int iAimEnt = GetAimEnt(client);
-	int iIndex;
-	
-	if (iAimEnt == -1)
+		
+	if (!IsValidEnt(iAimEnt))
 		return false;
 	
-	iIndex = FindInArray(iAimEnt) != -1;
+	int iIndex = FindInArray(iAimEnt);
 
-	if (!iIndex)
+	if (iIndex == -1)
 		return false;
 	
 	AcceptEntityInput(iAimEnt, "kill");
@@ -861,7 +858,7 @@ bool SaveProps()
 		{
 			int iEnt = EntRefToEntIndex(PropsArray.Get(i));
 			
-			if (iEnt == INVALID_ENT_REFERENCE)
+			if (!IsValidEnt(iEnt))
 				continue;
 			
 			char sClass[64];
@@ -943,7 +940,7 @@ void ResetProps()
 	{
 		int iEnt = EntRefToEntIndex(PropsArray.Get(i));
 		
-		if (iEnt != INVALID_ENT_REFERENCE)
+		if (IsValidEnt(iEnt))
 			AcceptEntityInput(iEnt, "kill");
 	}
 	PropsArray.Clear();
@@ -994,24 +991,22 @@ void ClearPropKv()
 
 int FindInArray(int iEnt)
 {
-	//PrintToChatAll("%d", iEnt);	
 	if (iEnt == -1)
-		return 0;
+		return -1;
 
 	for (int i = 0; i < PropsArray.Length; i++)
 	{
-		PrintToChatAll("%d | %d", iEnt, i);
 		int iSavedEnt = EntRefToEntIndex(PropsArray.Get(i));
 		
-		if (iSavedEnt == INVALID_ENT_REFERENCE)
-			return 0;
+		if (!IsValidEnt(iEnt))
+			return -1;
 
 		if (iSavedEnt == iEnt)
 		{
 			return i;
 		}
 	}
-	return 0;
+	return -1;
 }
 
 //Use this(instead of GetClientAimTarget) since we need to get non-solid entites too.
