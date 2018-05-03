@@ -499,7 +499,10 @@ public int Handler_DeleteAll(Menu menu, MenuAction action, int param1, int param
 		if (bDelete)
 		{
 			if (!PropKv.GotoFirstSubKey())
-				SetFailState("- HexProps - Failed to read: %s", sPropPath);
+			{
+				PrintToChat(param1, "[HexProps] Failed to read: '%s'\n Probably no props were added.", sPropPath);
+				return;
+			}
 				
 			do 
 			{
