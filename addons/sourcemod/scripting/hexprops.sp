@@ -57,9 +57,10 @@ public void OnPluginStart()
 	RegAdminCmd("sm_props", Cmd_Props, ADMFLAG_GENERIC);
 	
 	
-	if (!HookEvent("round_poststart", Event_RoundStart))
-		HookEvent("round_start", Event_RoundStart);
-	
+	if (!HookEventEx("round_poststart", Event_RoundStart))
+		if (!HookEventEx("round_start", Event_RoundStart))
+			if (!HookEventEx("dod_round_start", Event_RoundStart))
+				SetFailState("Unable to hook any round start event!");
 }
 
 public void OnMapStart()
