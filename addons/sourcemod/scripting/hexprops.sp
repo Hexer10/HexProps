@@ -55,7 +55,11 @@ public void OnPluginStart()
 	PropsArray = new ArrayList();
 	
 	RegAdminCmd("sm_props", Cmd_Props, ADMFLAG_GENERIC);
-	HookEvent("round_poststart", Event_RoundPostStart);
+	
+	
+	if (!HookEvent("round_poststart", Event_RoundStart))
+		HookEvent("round_start", Event_RoundStart);
+	
 }
 
 public void OnMapStart()
@@ -93,7 +97,7 @@ public void OnClientDisconnect(int client)
 	bPhysicProp[client] = false;
 }
 
-public void Event_RoundPostStart(Event event, const char[] name, bool dontBroadcast)
+public void Event_RoundStart(Event event, const char[] name, bool dontBroadcast)
 {
 	PropsArray.Clear();
 	LoadProps();
