@@ -1005,7 +1005,7 @@ int FindInArray(int iEnt)
 
 	for (int i = 0; i < PropsArray.Length; i++)
 	{
-		PrintToChatAll("%d | %d", iEnt, i);
+		//PrintToChatAll("%d | %d", iEnt, i);
 		int iSavedEnt = EntRefToEntIndex(PropsArray.Get(i));
 		
 		if (iSavedEnt == INVALID_ENT_REFERENCE)
