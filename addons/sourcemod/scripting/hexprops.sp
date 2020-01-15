@@ -74,6 +74,7 @@ void PreparePropKv()
 	GetCurrentMap(sMap, sizeof(sMap));
 	
 	BuildPath(Path_SM, sPropPath, sizeof(sPropPath), "configs/props/%s.props.txt", sMap); //Get the right "map" file
+	delete PropKv;
 	PropKv = new KeyValues("Props");
 	
 	if (!FileExists(sPropPath)) //Try to create kv file.
